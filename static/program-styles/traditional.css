@@ -1,4 +1,76 @@
 #program {
-  font-family: serif;
+  font-family: "Times New Roman", serif;
+  font-size: 11pt;
+  line-height: 1.4em;
   margin: 0.5in;
 }
+
+#program h2 {
+  text-align: center;
+  font-size: 1.2em;
+  padding: 0;
+  margin: 0 0 1em 0;
+}
+
+#program ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 1em;
+}
+
+#program #header-people {
+  display: flex;
+  justify-content: space-between;
+}
+#program #header-people ul:nth-child(2) { text-align: end; }
+#program #header-people .details { display: inline; }
+#program #header-people .title::after { content: ": "; }
+
+
+#program .proceedings li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  column-gap: 2em;
+  position: relative;
+}
+
+#program .proceedings li:not(.blank-line):not(.title-only)::before {
+  content: ".................................................................................................................................................................................................................................................................................................................................................................................................................................................................";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  margin-left: 0.2em;
+  white-space: nowrap;
+  overflow: hidden;
+  z-index: -1;
+}
+
+#program .proceedings li span {
+  background-color: white;
+  padding: 0 0.2em;
+  margin: 0 -0.2em;
+}
+
+#program li.blank-line {
+  height: 1em;
+}
+
+#program .proceedings li.title-only {
+  justify-content: center;
+  text-align: center;
+  margin: 1em;
+}
+
+#program .proceedings .details1,
+#program .proceedings .details2 {
+  text-align: end;
+}
+#program .proceedings .details2 { font-style: italic; }
+
+#program .proceedings .details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+}
+
