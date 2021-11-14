@@ -148,6 +148,7 @@ function datePrettyTimeRange(startDate, endDate, locale) {
 
 // Format date: 2021-01-01
 function dateIsoString(date) {
+  if (!date) date = nextSunday();
   return date.toISOString().substr(0, 10);
 }
 
@@ -156,3 +157,16 @@ function dateIsoString(date) {
 function addMinutes(dateTime, minutes) {
   return new Date(dateTime.getTime() + (minutes * 60000));
 }
+
+
+// Print page content
+window.addEventListener('beforeprint', function(e) {
+  let program = document.getElementById('program');
+  program.dataset.theme = 'light';
+  program.classList.add('print-area');
+});
+window.addEventListener('afterprint', function(e) {
+  let program = document.getElementById('program');
+  program.dataset.theme = '';
+  program.classList.remove('print-area');
+});

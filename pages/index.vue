@@ -7,6 +7,7 @@
         <p>
           <label for="ward-picker">Ward or branch:</label>
           <select name="ward-picker" id="ward-picker" v-model="ward">
+            <option value="">(none)</option>
             <option value="anywhere-3rd-ward">Anywhere 3rd Ward</option>
           </select>
         </p>
@@ -31,13 +32,27 @@
 <script>
   // Reference: https://www.toptal.com/vue-js/server-side-rendered-vue-js-using-nuxt-js
 
-  function signIn(ward, passphrase, router) {
+  function signIn(ward, passphrase, context) {
     // TODO: Implement sign-in with a server-side call, and make sure user can't get to editor page without being signed in
-    if (ward == 'anywhere-3rd-ward' && passphrase == 'asdf') {
-      router.push('/editor');
-    } else {
-      return 'Ward and passphrase combination is invalid.';
-    }
+
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4) {
+        if (this.status == 200) {
+          context.$router.push('/program?ward=' + ward);
+        } else if (this.status == 401) {
+          context.errors.push('Ward and passphrase combination is invalid.');
+        } else {
+          context.errors.push('Sign-in error.');
+        }
+      }
+    };
+    xhttp.open('POST', '/api/v1/signin');
+    xhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    xhttp.send(JSON.stringify({
+      unitSlug: ward,
+      unitPassphrase: passphrase,
+    }));
   }
 
   export default {
@@ -45,7 +60,7 @@
       return {
         siteTitle: 'MyProgram.cc',
         errors: [],
-        ward: null,
+        ward: '',
         passphrase: null,
       }
     },
@@ -64,10 +79,7 @@
     methods: {
       submitForm: function (e) {
         this.errors = [];
-
-        let errorMessage = signIn(this.ward, this.passphrase, this.$router);
-        if (errorMessage) this.errors.push(errorMessage);
-
+        signIn(this.ward, this.passphrase, this);
         e.preventDefault();
       },
     }
