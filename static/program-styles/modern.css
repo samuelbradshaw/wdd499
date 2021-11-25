@@ -1,21 +1,33 @@
 .program {
-  font-family: "Times New Roman", serif;
+  font-family: "Helvetica", sans-serif;
   font-size: 11pt;
+  font-weight: 300;
   line-height: 1.4em;
 }
 
-.program h2 {
-  text-align: center;
-  font-size: 1.2em;
-  padding: 0;
-  margin: 0 0 1em 0;
+.program-page {
+  font-size: 11pt;
 }
 
-.program h2 .date::before { content: "– "; }
-.program h2 .time {
-  display: block;
-  font-size: 0.8em;
+.program h2 {
+  font-size: 1.4em;
+  padding: 0;
+  margin: 0 0 1em 0;
+  position: relative;
 }
+
+.program h2 .date {
+  font-size: 0.6em;
+  float: right;
+  line-height: 2.2em;
+}
+.program h2 .time {
+  font-size: 0.6em;
+  font-weight: 300;
+  white-space: nowrap;
+}
+.program h2 .time::before { content: "("; }
+.program h2 .time::after { content: ")"; }
 
 .program ul {
   list-style: none;

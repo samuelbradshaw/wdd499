@@ -1,5 +1,3 @@
-var slidingSidebarContainers = document.getElementsByClassName('sliding-sidebar-container');
-
 // Toggle sidebar open or closed
 function toggleSlidingSidebar(containerId, newState) {
   let sidebarContainer = document.getElementById(containerId);
@@ -11,21 +9,24 @@ function toggleSlidingSidebar(containerId, newState) {
 }
 
 // Set up sidebar containers
-for (const sidebar of slidingSidebarContainers) {
-  let sidebarContainer = sidebar;
+window.onload = function () {
+  const slidingSidebarContainers = document.getElementsByClassName('sliding-sidebar-container');
+  for (const sidebar of slidingSidebarContainers) {
+    let sidebarContainer = sidebar;
 
-  // Set the default state of the sidebar based on the window size
-  if (window.innerWidth < 800) {
-    sidebar.dataset.state = 'closed';
-  } else {
-    sidebar.dataset.state = 'open';
+    // Set the default state of the sidebar based on the window size
+    if (window.innerWidth < 800) {
+      sidebar.dataset.state = 'closed';
+    } else {
+      sidebar.dataset.state = 'open';
+    }
+
+    // Add an overlay background for dimming content behind the sidebar
+    let sscOverlayBackground = document.createElement('div');
+    sscOverlayBackground.classList.add('ssc-overlay-background');
+    sscOverlayBackground.addEventListener('click', function(e) {
+      toggleSlidingSidebar(this.parentNode.id, 'closed');
+    });
+    sidebarContainer.appendChild(sscOverlayBackground);
   }
-
-  // Add an overlay background for dimming content behind the sidebar
-  let sscOverlayBackground = document.createElement('div');
-  sscOverlayBackground.classList.add('ssc-overlay-background');
-  sscOverlayBackground.addEventListener('click', function(e) {
-    toggleSlidingSidebar(this.parentNode.id, 'closed');
-  });
-  sidebarContainer.appendChild(sscOverlayBackground);
 }

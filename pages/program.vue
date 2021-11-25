@@ -2,7 +2,7 @@
   <div id="wrapper">
     <header>
       <h1><client-only><a :href="`/program?ward=${wardSlug}`">{{wardName}}</a></client-only></h1>
-      <div v-if="isAuthenticated && programId">
+      <div v-if="allowEdit && programId">
         <label class="header-radio">
           <input type="radio" value="view" v-model="mode">
           View
@@ -33,7 +33,7 @@
               </div>
             </div>
 
-            <div id="program"></div>
+            <div class="program"></div>
           </div>
 
 
@@ -48,11 +48,33 @@
             </header>
 
             <div>
-              View options
+              <h3>View options</h3>
+              <label>
+                Language:
+                <select v-model="viewLang">
+                  <option value="en-US">English</option>
+                </select>
+              </label>
+              <label>
+                Style:
+                <select v-model="viewStyle">
+                  <option value="traditional">Traditional</option>
+                  <option value="modern">Modern</option>
+                  <option value="none">None</option>
+                </select>
+              </label>
+              <label>
+                Theme:
+                <select v-model="viewTheme">
+                  <option value="default">System default</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </label>
             </div>
             <div v-if="mode == 'edit'">
-              <h2>Data</h2>
               <div v-if="programData">
+                <h3>Header</h3>
                 <label>
                   Presiding: <input v-model="programData.header.presiding">
                 </label>
@@ -60,13 +82,94 @@
                   Conducting: <input v-model="programData.header.conducting">
                 </label>
                 <label>
-                  <input type="checkbox" v-model="programData.proceedings.sacramentAtEnd"> Sacrament at end
+                  Music leader: <input v-model="programData.header.musicLeader">
                 </label>
                 <label>
-                  Sample template:
-                  <select v-model="programTemplate">
-                    <option value="blank">Blank</option>
-                    <option value="sample-regular">Regular</option>
+                  Accompanist: <input v-model="programData.header.accompanist">
+                </label>
+
+                <h3>Opening</h3>
+                <label>
+                  <input type="checkbox" v-model="programData.proceedings.welcome"> Welcome
+                </label>
+                <label>
+                  Opening hymn: <input v-model="programData.proceedings.openingHymn">
+                </label>
+                <label>
+                  Opening prayer: <input v-model="programData.proceedings.openingPrayer">
+                </label>
+
+                <h3>Ward Business</h3>
+                <div class="ward-business-item" v-for="(item, index) of programData.proceedings.wardBusiness" :key="`ward-business-${index}`">
+                  <label>
+                    Title: <input :value="programData.proceedings.wardBusiness[index].title" @input="updateWardBusinessItem(index)">
+                  </label>
+                  <label>
+                    Details: <input :placeholder="programData.header.conducting" :value="programData.proceedings.wardBusiness[index].details" @input="updateWardBusinessItem(index)">
+                  </label>
+                  <button type="button" @click="removeWardBusinessItem(index)">Remove</button>
+                </div>
+                <button type="button" @click="addWardBusinessItem()">Add</button>
+
+                <h3>Sacrament</h3>
+                <label>
+                  Sacrament hymn: <input v-model="programData.proceedings.sacramentHymn">
+                </label>
+                <label>
+                  <input type="checkbox" v-model="programData.proceedings.sacramentAtEnd"> Sacrament at end
+                </label>
+
+                <h3>Proceedings</h3>
+                <label>
+                  <input type="checkbox" v-model="programData.proceedings.testimonyMeeting"> Testimony meeting
+                </label>
+                <div class="ordered-item" v-for="(item, index) of programData.proceedings.orderedItems" :key="`ordered-${index}`">
+                  <label>
+                    Title: <input :value="programData.proceedings.orderedItems[index].title" @input="updateOrderedItem(index)">
+                  </label>
+                  <label>
+                    Details: <input :value="programData.proceedings.orderedItems[index].details" @input="updateOrderedItem(index)">
+                  </label>
+                  <label>
+                    Subtitle: <input :value="programData.proceedings.orderedItems[index].subtitle" @input="updateOrderedItem(index)">
+                  </label>
+                  <button type="button" @click="removeOrderedItem(index)">Remove</button>
+                </div>
+                <button type="button" @click="addOrderedItem()">Add</button>
+
+                <h3>Closing</h3>
+                <label>
+                  Closing hymn: <input v-model="programData.proceedings.closingHymn">
+                </label>
+                <label>
+                  Closing prayer: <input v-model="programData.proceedings.closingPrayer">
+                </label>
+
+                <h3>Second-Hour Meetings</h3>
+                <div class="second-hour-item" v-for="(item, index) of programData.secondHour" :key="`second-hour-${index}`">
+                  <label>
+                    Meeting: <input :value="programData.secondHour[index].meeting" @input="updateSecondHourItem(index)">
+                  </label>
+                  <label>
+                    Location: <input :value="programData.secondHour[index].location" @input="updateSecondHourItem(index)">
+                  </label>
+                  <button type="button" @click="removeSecondHourItem(index)">Remove</button>
+                </div>
+                <button type="button" @click="addSecondHourItem()">Add</button>
+
+                <h3>Print options</h3>
+                <label>
+                  Language:
+                  <select v-model="programData.printOptions.lang">
+                    <option value="en-US">English</option>
+                  </select>
+                </label>
+                <label>
+                  Style:
+                  <select v-model="programData.printOptions.style">
+                    <option value="traditional">Traditional</option>
+                    <option value="modern">Modern</option>
+                    <option value="none">None</option>
                   </select>
                 </label>
               </div>
@@ -85,9 +188,9 @@
     methods: {
       updateProgram() {
         // Update the program preview
-        document.getElementById('program').innerHTML = programAsHtml(this.programData, this.programLang);
+        document.querySelector('.program').innerHTML = programPageAsHtml(this.programData, this.viewLang);
 
-        if (this.isAuthenticated && this.mode == 'edit') {
+        if (this.allowEdit && this.mode == 'edit') {
           // Create updated JSON
           let jsonOutput = JSON.stringify(this.programData, null, 2);
           document.getElementById('jsonOutput').innerText = jsonOutput;
@@ -98,7 +201,7 @@
         let fullPicker = document.getElementById('full-program-picker');
         if (fullPicker) {
           let fullPickerHtml = '';
-          if (this.isAuthenticated) {
+          if (this.allowEdit) {
             fullPickerHtml += `
               <a href="/program?ward=${this.wardSlug}&date=new">New program</a>
             `;
@@ -162,8 +265,9 @@
         fetch(wardJsonUrl)
           .then(response => response.json())
           .then(data => {
-            this.isAuthenticated = data.isAuthenticated;
-            if (this.isAuthenticated) {
+            this.allowEdit = data.allowEdit;
+            // TODO: In prod, remove !
+            if (!this.allowEdit) {
               // This front-end authentication check is just for loading the correct UI. The server will prevent unauthorized edits from being saved.
               this.mode = 'edit';
             } else {
@@ -191,17 +295,58 @@
         fetch(programJsonUrl)
           .then(response => response.json())
           .then(data => {
-            this.programData = data.data;
-            this.programId = data.data.general.date;
-            this.programLang = data.settings.lang;
-            this.programStyle = data.settings.style;
-            this.programStylesheet = `/program-styles/${data.settings.style}.css`;
+            this.programData = data;
+            this.programId = data.general.date;
+            this.viewLang = data.printOptions.lang; // TODO: Use cookie / local storage if exists
+            this.viewStyle = data.printOptions.style; // TODO: Use cookie / local storage if exists
+            this.viewTheme = 'default'; // TODO: Use cookie / local storage if exists
             this.updateProgram();
           })
           .catch(error => {
             console.log(error);
           });
-      }
+      },
+      addWardBusinessItem() {
+        this.programData.proceedings.wardBusiness.push({ title: '', details: '' });
+      },
+      removeWardBusinessItem(index) {
+        this.programData.proceedings.wardBusiness.splice(index, 1);
+      },
+      updateWardBusinessItem(index) {
+        let wardBusinessItemElement = document.getElementsByClassName('ward-business-item')[index];
+        let title = wardBusinessItemElement.querySelectorAll('input')[0].value;
+        let details = wardBusinessItemElement.querySelectorAll('input')[1].value;
+        this.programData.proceedings.wardBusiness[index].title = title;
+        this.programData.proceedings.wardBusiness[index].details = details;
+      },
+      addOrderedItem() {
+        this.programData.proceedings.orderedItems.push({ title: '', details: '', subtitle: '' });
+      },
+      removeOrderedItem(index) {
+        this.programData.proceedings.orderedItems.splice(index, 1);
+      },
+      updateOrderedItem(index) {
+        let orderedItemElement = document.getElementsByClassName('ordered-item')[index];
+        let title = orderedItemElement.querySelectorAll('input')[0].value;
+        let details = orderedItemElement.querySelectorAll('input')[1].value;
+        let subtitle = orderedItemElement.querySelectorAll('input')[2].value;
+        this.programData.proceedings.orderedItems[index].title = title;
+        this.programData.proceedings.orderedItems[index].details = details;
+        this.programData.proceedings.orderedItems[index].subtitle = subtitle;
+      },
+      addSecondHourItem() {
+        this.programData.secondHour.push({ meeting: '', location: '' });
+      },
+      removeSecondHourItem(index) {
+        this.programData.secondHour.splice(index, 1);
+      },
+      updateSecondHourItem(index) {
+        let secondHourItemElement = document.getElementsByClassName('second-hour-item')[index];
+        let meeting = secondHourItemElement.querySelectorAll('input')[0].value;
+        let location = secondHourItemElement.querySelectorAll('input')[1].value;
+        this.programData.secondHour[index].meeting = meeting;
+        this.programData.secondHour[index].location = location;
+      },
     },
     watch: {
       '$route.query'() {
@@ -220,9 +365,9 @@
           this.fetchProgram(this.wardSlug, programId);
         }
       },
-      programTemplate: {
-        handler: function(programTemplate) {
-          this.fetchProgram(this.wardSlug, programTemplate);
+      viewTheme: {
+        handler: function(viewTheme) {
+          document.body.dataset.theme = viewTheme;
         }
       }
     },
@@ -232,13 +377,12 @@
         wardName: '',
         wardSlug: this.$route.query.ward,
         wardData: null,
-        programTemplate: 'sample-regular',
         programData: null,
         programId: this.$route.query.date,
-        programLang: 'en-US',
-        programStyle: 'traditional',
-        programStylesheet: '/program-styles/traditional.css',
-        isAuthenticated: false,
+        viewLang: 'en-US',
+        viewStyle: 'traditional',
+        viewTheme: 'default',
+        allowEdit: false,
         mode: 'view',
       }
     },
@@ -256,7 +400,7 @@
           }
         ],
         link: [
-          { rel: 'stylesheet', href: this.programStylesheet }
+          { rel: 'stylesheet', href: `/program-styles/${this.viewStyle}.css` }
         ],
       }
     },
@@ -288,7 +432,7 @@
     margin: 0.5em;
   }
 
-  #program {
+  .program {
     margin: var(--wrapper-padding) 0;
   }
 

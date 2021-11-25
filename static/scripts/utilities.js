@@ -1,5 +1,5 @@
 // Create a list item for the program
-function titleDetailsLi(title, details1, details2) {
+function titleDetailsLi(title, details, subtitle) {
   let li = document.createElement('li');
 
   if (title) {
@@ -8,24 +8,19 @@ function titleDetailsLi(title, details1, details2) {
     span.innerText = title;
     li.appendChild(span);
 
-    if (details1 || details2) {
-      let div = document.createElement('div');
-      div.className = "details";
-      li.appendChild(div);
-      if (details1) {
-        let span = document.createElement('span');
-        span.className = "details1";
-        span.innerText = details1;
-        div.appendChild(span);
-      }
-      if (details2) {
-        let span = document.createElement('span');
-        span.className = "details2";
-        span.innerText = details2;
-        div.appendChild(span);
-      }
+    if (details) {
+      let span = document.createElement('span');
+      span.className = "details";
+      span.innerText = details;
+      li.appendChild(span);
     } else {
-      li.className = 'title-only';
+      li.className = 'no-details';
+    }
+    if (subtitle) {
+      let span = document.createElement('span');
+      span.className = "subtitle";
+      span.innerText = subtitle;
+      li.appendChild(span);
     }
 
     return new XMLSerializer().serializeToString(li);
@@ -35,7 +30,7 @@ function titleDetailsLi(title, details1, details2) {
 }
 
 // Convert JSON program to HTML
-function programAsHtml(programData, locale) {
+function programPageAsHtml(programData, locale) {
   console.log(programData);
   let html = '';
 
@@ -46,10 +41,11 @@ function programAsHtml(programData, locale) {
   html += `
     <section id="sacrament-meeting">
       <h2>
-        Sacrament Meeting, ${formattedDate}<br>
-        <small>${sacramentMeetingTimeRange}</small>
+        Sacrament Meeting
+        <span class="date">${formattedDate}</span>
+        <span class="time">${sacramentMeetingTimeRange}</span>
       </h2>
-      <div id="header-people">
+      <div class="header-people">
         <ul>
           ${titleDetailsLi('Presiding', programData.header.presiding)}
           ${titleDetailsLi('Conducting', programData.header.conducting)}
@@ -63,33 +59,39 @@ function programAsHtml(programData, locale) {
     `;
 
   // Beginning of meeting
-  html += titleDetailsLi();
-  html += titleDetailsLi('Welcome', programData.header.conducting);
-  html += titleDetailsLi();
+  if (programData.proceedings.welcome) {
+    html += titleDetailsLi('Welcome', programData.header.conducting);
+    html += titleDetailsLi();
+  }
   html += titleDetailsLi('Opening Hymn', programData.proceedings.openingHymn);
   html += titleDetailsLi('Opening Prayer', programData.proceedings.openingPrayer);
   html += titleDetailsLi();
 
   // Ward business
-  for (item of programData.proceedings.wardBusiness) {
-    html += titleDetailsLi(item.title, item.details || programData.header.conducting);
+  if (programData.proceedings.wardBusiness.length > 0) {
+    for (item of programData.proceedings.wardBusiness) {
+      html += titleDetailsLi(item.title, item.details || programData.header.conducting);
+    }
+    html += titleDetailsLi();
   }
-  html += titleDetailsLi();
 
   // Sacrament
   let sacramentInfo = '';
   sacramentInfo += titleDetailsLi('Sacrament Hymn', programData.proceedings.sacramentHymn);
-  sacramentInfo += titleDetailsLi();
   sacramentInfo += titleDetailsLi('Blessing and Passing of the Sacrament');
-  sacramentInfo += titleDetailsLi();
   if (!programData.proceedings.sacramentAtEnd) {
     html += sacramentInfo;
   }
 
   // Talks, music, special programs, etc.
-  for (item of programData.proceedings.orderedItems) {
-    html += titleDetailsLi(item.title, item.details1, item.details2);
-    html += titleDetailsLi();
+  if (programData.proceedings.testimonyMeeting) {
+    html += titleDetailsLi('Testimony Meeting');
+  }
+  if (programData.proceedings.orderedItems.length > 0) {
+    for (item of programData.proceedings.orderedItems) {
+      html += titleDetailsLi(item.title, item.details, item.subtitle);
+      html += titleDetailsLi();
+    }
   }
 
   // End of meeting
@@ -113,8 +115,8 @@ function programAsHtml(programData, locale) {
     html += `
       <section id="second-hour-meetings">
         <h2>
-          Second-Hour Meetings<br>
-          <small>${secondHourTimeRange}</small>
+          Second-Hour Meetings
+          <span class="time">${secondHourTimeRange}</span>
         </h2>
         <ul class="proceedings">
       `;
@@ -124,7 +126,7 @@ function programAsHtml(programData, locale) {
 
   }
 
-  return html;
+  return `<div class="program-page">${html}</div>`;
 }
 
 // Get the date of the next Sunday
@@ -161,12 +163,22 @@ function addMinutes(dateTime, minutes) {
 
 // Print page content
 window.addEventListener('beforeprint', function(e) {
-  let program = document.getElementById('program');
+  let program = document.querySelector('.program');
   program.dataset.theme = 'light';
   program.classList.add('print-area');
+  if (window.safari !== undefined) {
+    program.classList.add('safari');
+  }
+
+  // Create a duplicate page (for printing two programs per page)
+  let page2 = program.querySelector('.program-page').cloneNode(true);
+  page2.id = 'page2';
+  page2.classList.add('print-only');
+  program.appendChild(page2);
 });
 window.addEventListener('afterprint', function(e) {
-  let program = document.getElementById('program');
+  document.getElementById('page2').remove();
+  let program = document.querySelector('.program');
   program.dataset.theme = '';
-  program.classList.remove('print-area');
+  program.classList.remove('print-area', 'safari');
 });

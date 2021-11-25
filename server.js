@@ -127,58 +127,58 @@ function updateProgram(unitSlug, programDate, programJson, callback) {
 
 function getDefaultProgramData(unitSlug, newDate, basedOnDate, callback) {
   const programData = {
-    settings: {
-      lang: 'en',
+    printOptions: {
+      lang: 'en-US',
       style: 'traditional'
     },
-    data: {
-      general: {
-        date: '',
-        startTime: '',
-        wardName: '',
-        stakeName: '',
-        epigraph: '',
-        epigraphCitation: '',
-        imageUrl: ''
-      },
-      header: {
-        presiding: '',
-        conducting: '',
-        musicLeader: '',
-        accompanist: ''
-      },
-      proceedings: {
-        fastSunday: false,
-        sacramentAtEnd: false,
-        openingHymn: '',
-        closingHymn: '',
-        sacramentHymn: '',
-        openingPrayer: '',
-        closingPrayer: '',
-        wardBusiness: [
-          { title: '', details: '' }
-        ],
-        orderedItems: [
-          { title: '', details1: '', details2: '' }
-        ]
-      },
-      secondHour: [
-        { meeting: '', location: '' }
+    general: {
+      date: '',
+      startTime: '',
+      wardName: '',
+      stakeName: '',
+      epigraph: '',
+      epigraphCitation: '',
+      imageUrl: ''
+    },
+    header: {
+      presiding: '',
+      conducting: '',
+      musicLeader: '',
+      accompanist: ''
+    },
+    proceedings: {
+      testimonyMeeting: false,
+      sacramentAtEnd: false,
+      welcome: true,
+      openingHymn: '',
+      closingHymn: '',
+      sacramentHymn: '',
+      openingPrayer: '',
+      closingPrayer: '',
+      wardBusiness: [
+        { title: '', details: '' }
+      ],
+      orderedItems: [
+        { title: '', details: '', subtitle: '' }
       ]
-    }
+    },
+    secondHour: [
+      { meeting: '', location: '' }
+    ]
   }
 
   if (basedOnDate) {
     getProgram(unitSlug, basedOnDate, (data) => {
-      programData.data.general = data.data.general
-      programData.data.header = data.data.header
-      programData.data.general.date = newDate
+      programData.printOptions = data.printOptions
+      programData.general = data.general
+      programData.header = data.header
+      programData.general.date = newDate
       callback(programData)
     })
   } else {
     getUnit(unitSlug, (data) => {
-      programData.data.general.wardName = data.unitName
-      programData.data.general.date = newDate
+      programData.general.wardName = data.unitName
+      programData.general.date = newDate
       callback(programData)
     })
   }
@@ -228,7 +228,7 @@ app.get('/api/v1/units/:unitSlug', (req, res) => {
   const unitSlug = req.params.unitSlug
   getUnit(unitSlug, (data) => {
     // TODO: Make sure authentication is correct in prod
-    data.isAuthenticated = (req.session && req.session.user === req.params.unitSlug)
+    data.allowEdit = (req.session && req.session.user === req.params.unitSlug)
     res.json(data)
   })
 })
@@ -246,6 +246,7 @@ app.post('/api/v1/units/:unitSlug', auth, (req, res) => {
   const programDate = req.body.programDate
   const basedOnDate = req.body.basedOnDate
 
+  // TODO: Don't overwrite existing program when user tries to create a new program with the same date
   getDefaultProgramData(unitSlug, programDate, basedOnDate, (programJson) => {
     updateProgram(unitSlug, programDate, programJson, (status) => {
       res.status(status)

@@ -12,7 +12,7 @@
 
   html {
     font-family: Helvetica, sans-serif;
-    font-size: 16px;
+    font-size: 11pt;
     -ms-text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
   }
@@ -142,6 +142,7 @@
 
   /* PRINT */
 
+  .print-only { display: none; }
   @media print {
     body { background-color: white; }
     body * { visibility: hidden; }
@@ -150,14 +151,31 @@
     .print-area, .print-area * {
       visibility: visible;
     }
+    .print-area .print-only { display: block; }
     .print-area {
+      font-size: 11pt !important;
       position: absolute;
-      top: 0;
+      top: 0.5in;
+      left: 0.5in;
       right: 0.5in;
-      width: 4.5in;
-      margin: 0.5in 0 !important;
-      height: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr;
+      grid-column-gap: 1in;
+      margin: 0 !important;
       z-index: 2;
+    }
+    .print-area.safari {
+      top: 0.25in;
+      left: 0.25in;
+      right: 0.25in;
+    }
+    .print-area::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      border: 1px solid var(--gray-95);
+      height: 100%;
     }
   }
 
@@ -182,7 +200,7 @@
     flex-grow: 0;
     background-color: var(--page-bg);
     box-sizing: border-box;
-    width: 300px;
+    width: 33%;
     min-width: 300px;
     padding: 1rem var(--wrapper-padding) 2rem var(--wrapper-padding);
     border-left: 1px solid var(--gray-90);
