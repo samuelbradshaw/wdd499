@@ -31,7 +31,6 @@ function titleDetailsLi(title, details, subtitle) {
 
 // Convert JSON program to HTML
 function programPageAsHtml(programData, locale) {
-  console.log(programData);
   let html = '';
 
   let dateTime = (programData.general.date && programData.general.startTime) ? new Date(`${programData.general.date}T${programData.general.startTime}`) : nextSunday();
@@ -110,7 +109,7 @@ function programPageAsHtml(programData, locale) {
     `;
 
   // Second-hour meetings
-  if (programData.secondHour.length > 0) {
+  if (programData.secondHour.length > 0 && programData.secondHour[0].meeting) {
     let secondHourTimeRange = datePrettyTimeRange(addMinutes(dateTime, 70), addMinutes(dateTime, 120), locale);
     html += `
       <section id="second-hour-meetings">
@@ -163,12 +162,17 @@ function addMinutes(dateTime, minutes) {
 
 // Print page content
 window.addEventListener('beforeprint', function(e) {
-  let program = document.querySelector('.program');
-  program.dataset.theme = 'light';
-  program.classList.add('print-area');
-  if (window.safari !== undefined) {
-    program.classList.add('safari');
+
+  // Set theme and style to print settings
+  document.body.dataset.theme = 'light';
+  if (document.getElementById('select-print-style')) {
+    document.getElementById('program-stylesheet').href = `/program-styles/${document.getElementById('select-print-style').value}.css`;
   }
+
+  // Add print classes
+  let program = document.querySelector('.program');
+  program.classList.add('print-area');
+  if (window.safari !== undefined) program.classList.add('safari');
 
   // Create a duplicate page (for printing two programs per page)
   let page2 = program.querySelector('.program-page').cloneNode(true);
@@ -177,8 +181,9 @@ window.addEventListener('beforeprint', function(e) {
   program.appendChild(page2);
 });
 window.addEventListener('afterprint', function(e) {
+  document.body.dataset.theme = document.getElementById('select-theme').value;
+  document.getElementById('program-stylesheet').href = `/program-styles/${document.getElementById('select-style').value}.css`;
   document.getElementById('page2').remove();
   let program = document.querySelector('.program');
-  program.dataset.theme = '';
   program.classList.remove('print-area', 'safari');
 });

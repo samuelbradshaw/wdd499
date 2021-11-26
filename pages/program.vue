@@ -3,14 +3,18 @@
     <header>
       <h1><client-only><a :href="`/program?ward=${wardSlug}`">{{wardName}}</a></client-only></h1>
       <div v-if="allowEdit && programId">
-        <label class="header-radio">
+        <label>
           <input type="radio" value="view" v-model="mode">
           View
         </label>
-        <label class="header-radio">
+        <label>
           <input type="radio" value="edit" v-model="mode">
           Edit
         </label>
+      </div>
+      <div v-show="!programId">
+        <button type="button" @click="signOut()" v-if="allowEdit">Sign Out</button>
+        <button type="button" @click="signIn()" v-else>Sign In</button>
       </div>
     </header>
     <main>
@@ -47,134 +51,178 @@
               </div>
             </header>
 
-            <div>
-              <h3>View options</h3>
-              <label>
-                Language:
-                <select v-model="viewLang">
+            <details open>
+              <summary>View options</summary>
+              <p>
+                <label for="select-lang">Language:</label>
+                <select id="select-lang" v-model="viewLang">
                   <option value="en-US">English</option>
                 </select>
-              </label>
-              <label>
-                Style:
-                <select v-model="viewStyle">
+              </p>
+              <p>
+                <label for="select-style">Style:</label>
+                <select id="select-style" v-model="viewStyle">
                   <option value="traditional">Traditional</option>
                   <option value="modern">Modern</option>
                   <option value="none">None</option>
                 </select>
-              </label>
-              <label>
-                Theme:
-                <select v-model="viewTheme">
+              </p>
+              <p>
+                <label for="select-theme">Theme:</label>
+                <select id="select-theme" v-model="viewTheme">
                   <option value="default">System default</option>
                   <option value="light">Light</option>
                   <option value="dark">Dark</option>
                 </select>
-              </label>
-            </div>
-            <div v-if="mode == 'edit'">
-              <div v-if="programData">
-                <h3>Header</h3>
-                <label>
-                  Presiding: <input v-model="programData.header.presiding">
-                </label>
-                <label>
-                  Conducting: <input v-model="programData.header.conducting">
-                </label>
-                <label>
-                  Music leader: <input v-model="programData.header.musicLeader">
-                </label>
-                <label>
-                  Accompanist: <input v-model="programData.header.accompanist">
-                </label>
+              </p>
+            </details>
 
-                <h3>Opening</h3>
-                <label>
-                  <input type="checkbox" v-model="programData.proceedings.welcome"> Welcome
-                </label>
-                <label>
-                  Opening hymn: <input v-model="programData.proceedings.openingHymn">
-                </label>
-                <label>
-                  Opening prayer: <input v-model="programData.proceedings.openingPrayer">
-                </label>
+            <div v-if="mode == 'edit' && programData">
 
-                <h3>Ward Business</h3>
+              <details>
+                <summary>Header</summary>
+                <p>
+                  <label for="presiding">Presiding:</label>
+                  <input id="presiding" type="text" v-model="programData.header.presiding">
+                </p>
+                <p>
+                  <label for="conducting">Conducting:</label>
+                  <input id="conducting" type="text" v-model="programData.header.conducting">
+                </p>
+                <p>
+                  <label for="music-leader">Music leader:</label>
+                  <input id="music-leader" type="text" v-model="programData.header.musicLeader">
+                </p>
+                <p>
+                  <label for="accompanist">Accompanist:</label>
+                  <input id="accompanist" type="text" v-model="programData.header.accompanist">
+                </p>
+              </details>
+
+              <details>
+                <summary>Opening</summary>
+                <p>
+                  <input id="welcome" type="checkbox" v-model="programData.proceedings.welcome">
+                  <label for="welcome">Welcome</label>
+                </p>
+                <p>
+                  <label for="opening-hymn">Hymn:</label>
+                  <input id="opening-hymn" type="text" v-model="programData.proceedings.openingHymn">
+                </p>
+                <p>
+                  <label for="opening-prayer">Prayer:</label>
+                  <input id="opening-prayer" type="text" v-model="programData.proceedings.openingPrayer">
+                </p>
+              </details>
+
+              <details>
+                <summary>Ward Business</summary>
                 <div class="ward-business-item" v-for="(item, index) of programData.proceedings.wardBusiness" :key="`ward-business-${index}`">
-                  <label>
-                    Title: <input :value="programData.proceedings.wardBusiness[index].title" @input="updateWardBusinessItem(index)">
-                  </label>
-                  <label>
-                    Details: <input :placeholder="programData.header.conducting" :value="programData.proceedings.wardBusiness[index].details" @input="updateWardBusinessItem(index)">
-                  </label>
-                  <button type="button" @click="removeWardBusinessItem(index)">Remove</button>
+                  <p>
+                    <label :for="`ward-business-${index}-title`">Title:</label>
+                    <input :id="`ward-business-${index}-title`" type="text" :value="programData.proceedings.wardBusiness[index].title" @input="updateWardBusinessItem(index)">
+                  </p>
+                  <p>
+                    <label :for="`ward-business-${index}-details`">Details:</label>
+                    <input :id="`ward-business-${index}-details`" type="text" :placeholder="programData.header.conducting" :value="programData.proceedings.wardBusiness[index].details" @input="updateWardBusinessItem(index)">
+                  </p>
+                  <p>
+                    <button type="button" @click="removeWardBusinessItem(index)">Remove</button>
+                  </p>
                 </div>
-                <button type="button" @click="addWardBusinessItem()">Add</button>
+                <button class="add-button" type="button" @click="addWardBusinessItem()">+ Add</button>
+              </details>
 
-                <h3>Sacrament</h3>
-                <label>
-                  Sacrament hymn: <input v-model="programData.proceedings.sacramentHymn">
-                </label>
-                <label>
-                  <input type="checkbox" v-model="programData.proceedings.sacramentAtEnd"> Sacrament at end
-                </label>
+              <details>
+                <summary>Sacrament</summary>
+                <p>
+                  <label for="sacrament-hymn">Hymn:</label>
+                  <input id="sacrament-hymn" type="text" v-model="programData.proceedings.sacramentHymn">
+                </p>
+                <p>
+                  <input id="sacrament-at-end" type="checkbox" v-model="programData.proceedings.sacramentAtEnd">
+                  <label for="sacrament-at-end">Sacrament at end</label>
+                </p>
+              </details>
 
-                <h3>Proceedings</h3>
-                <label>
-                  <input type="checkbox" v-model="programData.proceedings.testimonyMeeting"> Testimony meeting
-                </label>
+              <details>
+                <summary>Proceedings</summary>
+                <p>
+                  <input id="testimony-meeting" type="checkbox" v-model="programData.proceedings.testimonyMeeting">
+                  <label for="testimony-meeting">Testimony meeting</label>
+                </p>
                 <div class="ordered-item" v-for="(item, index) of programData.proceedings.orderedItems" :key="`ordered-${index}`">
-                  <label>
-                    Title: <input :value="programData.proceedings.orderedItems[index].title" @input="updateOrderedItem(index)">
-                  </label>
-                  <label>
-                    Details: <input :value="programData.proceedings.orderedItems[index].details" @input="updateOrderedItem(index)">
-                  </label>
-                  <label>
-                    Subtitle: <input :value="programData.proceedings.orderedItems[index].subtitle" @input="updateOrderedItem(index)">
-                  </label>
-                  <button type="button" @click="removeOrderedItem(index)">Remove</button>
+                  <p>
+                    <label :for="`ordered-${index}-title`">Title:</label>
+                    <input :id="`ordered-${index}-title`" type="text" :value="programData.proceedings.orderedItems[index].title" @input="updateOrderedItem(index)">
+                  </p>
+                  <p>
+                    <label :for="`ordered-${index}-details`">Details:</label>
+                    <input :id="`ordered-${index}-details`" type="text" :value="programData.proceedings.orderedItems[index].details" @input="updateOrderedItem(index)">
+                  </p>
+                  <p>
+                    <label :for="`ordered-${index}-subtitle`">Subtitle:</label>
+                    <input :id="`ordered-${index}-subtitle`" type="text" :value="programData.proceedings.orderedItems[index].subtitle" @input="updateOrderedItem(index)">
+                  </p>
+                  <p>
+                    <button type="button" @click="removeOrderedItem(index)">Remove</button>
+                  </p>
                 </div>
-                <button type="button" @click="addOrderedItem()">Add</button>
+                <button class="add-button" type="button" @click="addOrderedItem()">+ Add</button>
+              </details>
 
-                <h3>Closing</h3>
-                <label>
-                  Closing hymn: <input v-model="programData.proceedings.closingHymn">
-                </label>
-                <label>
-                  Closing prayer: <input v-model="programData.proceedings.closingPrayer">
-                </label>
+              <details>
+                <summary>Closing</summary>
+                <p>
+                  <label for="closing-hymn">Hymn:</label>
+                  <input id="closing-hymn" type="text" v-model="programData.proceedings.closingHymn">
+                </p>
+                <p>
+                  <label for="closing-prayer">Prayer:</label>
+                  <input id="closing-prayer" type="text" v-model="programData.proceedings.closingPrayer">
+                </p>
+              </details>
 
-                <h3>Second-Hour Meetings</h3>
+              <details>
+                <summary>Second-Hour Meetings</summary>
                 <div class="second-hour-item" v-for="(item, index) of programData.secondHour" :key="`second-hour-${index}`">
-                  <label>
-                    Meeting: <input :value="programData.secondHour[index].meeting" @input="updateSecondHourItem(index)">
-                  </label>
-                  <label>
-                    Location: <input :value="programData.secondHour[index].location" @input="updateSecondHourItem(index)">
-                  </label>
-                  <button type="button" @click="removeSecondHourItem(index)">Remove</button>
+                  <p>
+                    <label :for="`second-hour-${index}-meeting`">Meeting:</label>
+                    <input :id="`second-hour-${index}-meeting`" type="text" :value="programData.secondHour[index].meeting" @input="updateSecondHourItem(index)">
+                  </p>
+                  <p>
+                    <label :for="`second-hour-${index}-location`">Location:</label>
+                    <input :id="`second-hour-${index}-location`" type="text" :value="programData.secondHour[index].location" @input="updateSecondHourItem(index)">
+                  </p>
+                  <p>
+                    <button type="button" @click="removeSecondHourItem(index)">Remove</button>
+                  </p>
                 </div>
-                <button type="button" @click="addSecondHourItem()">Add</button>
+                <button class="add-button" type="button" @click="addSecondHourItem()">+ Add</button>
+              </details>
 
-                <h3>Print options</h3>
-                <label>
-                  Language:
-                  <select v-model="programData.printOptions.lang">
+              <details>
+                <summary>Print options</summary>
+                <p>
+                  <label for="select-print-lang">Language:</label>
+                  <select id="select-print-lang" v-model="programData.printOptions.lang">
                     <option value="en-US">English</option>
                   </select>
-                </label>
-                <label>
-                  Style:
-                  <select v-model="programData.printOptions.style">
+                </p>
+                <p>
+                  <label for="select-print-style">Style:</label>
+                  <select id="select-print-style" v-model="programData.printOptions.style">
                     <option value="traditional">Traditional</option>
                     <option value="modern">Modern</option>
                     <option value="none">None</option>
                   </select>
-                </label>
-              </div>
-              <div id="jsonOutput"></div>
+                </p>
+              </details>
+
             </div>
+            <p class="sign-in-message" v-else>
+              If you’re an admin, <a href="/">sign in</a> to edit.
+            </p>
           </aside>
         </div>
 
@@ -190,10 +238,18 @@
         // Update the program preview
         document.querySelector('.program').innerHTML = programPageAsHtml(this.programData, this.viewLang);
 
+        // Create updated JSON and save to database
         if (this.allowEdit && this.mode == 'edit') {
-          // Create updated JSON
-          let jsonOutput = JSON.stringify(this.programData, null, 2);
-          document.getElementById('jsonOutput').innerText = jsonOutput;
+
+          // TODO: Use correct URL
+          fetch(`http://localhost:5000/api/v1/units/${this.wardSlug}/${this.programId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', },
+            body: JSON.stringify(this.programData, null, 2),
+          })
+          .catch(error => {
+            console.log(error);
+          });
         }
       },
       showAvailablePrograms() {
@@ -233,26 +289,29 @@
         }
 
         // Post request to create a new program
-        var xhttp = new XMLHttpRequest();
-        let context = this;
-        xhttp.onreadystatechange = function() {
-          if (this.readyState == 4) {
-            if (this.status == 200 || this.status == 201) {
-              return context.$router.push({ path: '/program', query: {ward: wardSlug, date: date}});
-            } else if (this.status == 401) {
-              return context.$router.push('/');
-            } else {
-              return context.$router.push('/program?ward=' + wardSlug);
-            }
-          }
-        };
         // TODO: Use correct URL
-        xhttp.open('POST', 'http://localhost:5000/api/v1/units/' + wardSlug);
-        xhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-        xhttp.send(JSON.stringify({
-          programDate: date,
-          basedOnDate: basedOnId,
-        }));
+        fetch(`http://localhost:5000/api/v1/units/${this.wardSlug}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', },
+          body: JSON.stringify({
+            programDate: date,
+            basedOnDate: basedOnId,
+          }),
+        })
+        .then(response => {
+          const status = response.status;
+          if (status == 200 || status == 201) {
+            return this.$router.push({ path: '/program', query: {ward: wardSlug, date: date}});
+          } else if (status == 401) {
+            return this.$router.push('/');
+          } else {
+            return this.$router.push('/program?ward=' + wardSlug);
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
+
       },
       fetchData(wardSlug, programId) {
         if (!wardSlug) {
@@ -266,8 +325,7 @@
           .then(response => response.json())
           .then(data => {
             this.allowEdit = data.allowEdit;
-            // TODO: In prod, remove !
-            if (!this.allowEdit) {
+            if (this.allowEdit) {
               // This front-end authentication check is just for loading the correct UI. The server will prevent unauthorized edits from being saved.
               this.mode = 'edit';
             } else {
@@ -297,9 +355,11 @@
           .then(data => {
             this.programData = data;
             this.programId = data.general.date;
-            this.viewLang = data.printOptions.lang; // TODO: Use cookie / local storage if exists
-            this.viewStyle = data.printOptions.style; // TODO: Use cookie / local storage if exists
-            this.viewTheme = 'default'; // TODO: Use cookie / local storage if exists
+            if (process.client) {
+              this.viewLang = localStorage.getItem('viewLang') || data.printOptions.lang;
+              this.viewStyle = localStorage.getItem('viewStyle') || data.printOptions.style;
+              this.viewTheme = localStorage.getItem('viewTheme') || 'default';
+            }
             this.updateProgram();
           })
           .catch(error => {
@@ -347,6 +407,19 @@
         this.programData.secondHour[index].meeting = meeting;
         this.programData.secondHour[index].location = location;
       },
+      signOut() {
+        // TODO: Use correct URL
+        fetch('http://localhost:5000/api/v1/signout')
+        .then(() => {
+          this.$router.push('/');
+        })
+        .catch(error => {
+          console.log(error);
+        });
+      },
+      signIn() {
+        this.$router.push('/');
+      },
     },
     watch: {
       '$route.query'() {
@@ -365,15 +438,25 @@
           this.fetchProgram(this.wardSlug, programId);
         }
       },
+      viewLang: {
+        handler: function(viewLang) {
+          localStorage.setItem('viewLang', viewLang);
+        }
+      },
+      viewStyle: {
+        handler: function(viewStyle) {
+          localStorage.setItem('viewStyle', viewStyle);
+        }
+      },
       viewTheme: {
         handler: function(viewTheme) {
           document.body.dataset.theme = viewTheme;
+          localStorage.setItem('viewTheme', viewTheme);
         }
-      }
+      },
     },
     data() {
       return {
-        siteTitle: 'MyProgram.cc',
         wardName: '',
         wardSlug: this.$route.query.ward,
         wardData: null,
@@ -387,12 +470,11 @@
       }
     },
     mounted() {
-      console.log('mounted', this.wardSlug, this.programId);
       this.fetchData(this.wardSlug, this.programId);
     },
     head() {
       return {
-        title: this.wardName + ' – ' + this.siteTitle,
+        title: (this.programId ? this.programId + ' – ' : '') + this.wardName + ' – MyProgram.cc',
         meta: [
           {
             hid: 'description', name: 'description',
@@ -400,7 +482,7 @@
           }
         ],
         link: [
-          { rel: 'stylesheet', href: `/program-styles/${this.viewStyle}.css` }
+          { rel: 'stylesheet', href: `/program-styles/${this.viewStyle}.css`, id: 'program-stylesheet' }
         ],
       }
     },
@@ -413,32 +495,18 @@
 </script>
 
 <style>
-  main {
-    margin: 0 var(--wrapper-padding);
-  }
+  main { margin: 0 var(--wrapper-padding); }
 
-  #full-program-picker {
-    padding: 20px 0;
-  }
+  #full-program-picker { padding: 20px 0; }
   #full-program-picker a {
     display: inline-flex;
-    width: 150px;
-    height: 100px;
+    width: 150px; height: 100px;
     background-color: var(--accent-color-light-bg);
     border: 1px solid currentColor;
     align-items: center;
     justify-content: center;
     text-align: center;
     margin: 0.5em;
-  }
-
-  .program {
-    margin: var(--wrapper-padding) 0;
-  }
-
-  .header-radio {
-    display: inline-block;
-    padding: 0.5em 0 0 0.5em;
   }
 
   #wrapper { min-height: 100vh; }
@@ -448,7 +516,7 @@
     align-items: baseline;
     justify-content: space-between;
     padding: 0.8em;
-    min-height: 4.2em;
+    min-height: 4em;
     background-color: var(--header-bg);
     color: var(--header-text-color);
   }
@@ -456,21 +524,49 @@
     color: var(--header-text-color);
     text-decoration: none;
   }
-  #sidebar-container {
-    min-height: calc(100vh - 3.5em);
-  }
-  #sidebar label {
-    display: block;
-    margin: 10px 0;
-  }
-  #jsonOutput {
-    white-space: pre-wrap;
-    padding: 0.5em;
-    font-size: 0.8em;
-    font-family: monospace;
-    background-color: hsl(0, 0%, 95%);
+  #wrapper > header label {
+    display: inline-block;
+    padding: 0.5em 0 0 0.5em;
   }
 
+  .program { margin: var(--wrapper-padding) 0; }
+
+
+  /* SIDEBAR */
+
+  #sidebar-container { min-height: calc(100vh - 4em); }
+  #sidebar .sign-in-message {
+    font-size: 0.8em;
+    margin: 1em 0;
+  }
+  #sidebar details {
+    border-bottom: 1px solid var(--gray-90);
+    margin: 0; padding: 0 0 16px 0;
+  }
+  #sidebar summary {
+    font-weight: bold;
+    margin: 16px 0;
+  }
+  #sidebar details p {
+    display: flex;
+    padding: 0.4em 0;
+    align-items: center;
+    font-size: 0.8em;
+  }
+  #sidebar details p :not(label):first-child { margin: 0 0.5em 0 4.8em; }
+  #sidebar label:first-child {
+    min-width: 4.8em;
+    margin-right: 0.5em;
+  }
+  #sidebar .add-button { margin: 0.6em 0.5em; }
+  #sidebar input[type="text"] {
+    border: 1px solid var(--gray-67);
+    background-color: var(--page-bg);
+    color: var(--text-color);
+    font: inherit;
+    padding: 3px 4px;
+    flex-grow: 1;
+  }
 
 </style>
 

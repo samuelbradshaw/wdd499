@@ -2,13 +2,12 @@
   <div id="sign-in">
     <main>
       <h1>MyProgram.cc</h1>
-      <p>Sign in to update your sacrament meeting program.</p>
+      <p>Sign in to manage sacrament meeting programs.</p>
       <form id="sign-in-form" @submit="submitForm">
         <p>
           <label for="ward-picker">Ward or branch:</label>
           <select name="ward-picker" id="ward-picker" v-model="ward">
             <option value="">(none)</option>
-            <option value="anywhere-3rd-ward">Anywhere 3rd Ward</option>
           </select>
         </p>
         <p>
@@ -22,9 +21,10 @@
           <p v-for="error in errors" v-bind:key="error">{{error}}</p>
         </div>
       </form>
-      <p>
-        To create an account, contact the <a href="mailto:admin@myprogram.cc?subject=MyProgram.cc">admin</a>.
-      </p>
+      <br>
+      <p>To see this week’s program, contact your ward leaders.</p>
+      <p>To create a ward account, contact the <a href="mailto:admin@myprogram.cc?subject=MyProgram.cc">admin</a>.</p>
+      <p>Click <a href="/program/?ward=anywhere-3rd-ward">here</a> to see sample programs.</p>
     </main>
   </div>
 </template>
@@ -33,40 +33,59 @@
   // Reference: https://www.toptal.com/vue-js/server-side-rendered-vue-js-using-nuxt-js
 
   function signIn(ward, passphrase, context) {
-    // TODO: Implement sign-in with a server-side call, and make sure user can't get to editor page without being signed in
 
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4) {
-        if (this.status == 200) {
-          context.$router.push('/program?ward=' + ward);
-        } else if (this.status == 401) {
-          context.errors.push('Ward and passphrase combination is invalid.');
-        } else {
-          context.errors.push('Sign-in error.');
-        }
+    // TODO: Use correct URL
+    fetch('http://localhost:5000/api/v1/signin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', },
+      body: JSON.stringify({
+        unitSlug: ward,
+        unitPassphrase: passphrase,
+      }),
+    })
+    .then(response => {
+      let status = response.status;
+      if (status == 200) {
+        context.$router.push({ path: '/program', query: {ward: ward}});
+      } else if (status == 401) {
+        context.errors.push('Ward and passphrase combination is invalid.');
+      } else {
+        context.errors.push('Sign-in error.');
       }
-    };
-    xhttp.open('POST', '/api/v1/signin');
-    xhttp.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    xhttp.send(JSON.stringify({
-      unitSlug: ward,
-      unitPassphrase: passphrase,
-    }));
+    })
+    .catch(error => {
+      console.log(error);
+    });
+
   }
 
   export default {
     data() {
       return {
-        siteTitle: 'MyProgram.cc',
         errors: [],
         ward: '',
         passphrase: null,
       }
     },
+    mounted() {
+      // TODO: Use correct URL
+      fetch('http://localhost:5000/api/v1/units')
+      .then(response => response.json())
+      .then(units => {
+        const wardPicker = document.getElementById('ward-picker');
+        for (const unit of units) {
+          wardPicker.insertAdjacentHTML('beforeend', `
+            <option value="${unit.unitSlug}">${unit.unitName}</option>
+          `);
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
+    },
     head() {
       return {
-        title: this.siteTitle,
+        title: 'MyProgram.cc',
         meta: [
           {
             hid: 'description',

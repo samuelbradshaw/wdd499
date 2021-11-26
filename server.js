@@ -15,6 +15,11 @@ app.set('json spaces', 2)
   .use(express.static(path.join(__dirname, 'dist')))
   .use(cookieParser())
 
+app.use(function (req, res, next) {
+  console.log(req.method + " " + req.url);
+  next();
+});
+
 // Authentication
 // https://www.section.io/engineering-education/session-management-in-nodejs-using-expressjs-and-express-session/
 // https://www.codexpedia.com/node-js/a-very-basic-session-auth-in-node-js-with-express-js/
@@ -74,6 +79,17 @@ app.use(function (req, res, next) {
 
 // FUNCTIONS
 
+function getUnits(callback) {
+  let data = []
+  con.query(`SELECT unitSlug, unitName FROM Unit
+            ORDER BY unitName`,
+    (err, rows) => {
+      if (err) throw err
+      data = rows
+      callback(data)
+    })
+}
+
 function getUnit(unitSlug, callback) {
   const data = {
     unitSlug: '',
@@ -90,7 +106,7 @@ function getUnit(unitSlug, callback) {
       data.unitSlug = rows?.[0]?.unitSlug ?? ''
       data.unitName = rows?.[0]?.unitName ?? ''
       for (const row of rows) {
-        data.programDates.push(row.programDate)
+        if (row.programDate) data.programDates.push(row.programDate)
       }
       callback(data)
     })
@@ -109,17 +125,29 @@ function getProgram(unitSlug, programDate, callback) {
     })
 }
 
+function createProgram(unitSlug, programDate, programJson, callback) {
+  con.query(`INSERT IGNORE INTO Program (unitSlug, programDate, programJson)
+            VALUES (?, ?, ?)`, [unitSlug, programDate, JSON.stringify(programJson)],
+    (err, result) => {
+      let status = 200
+      if (result.affectedRows == 1) { // New record created
+        status = 201
+      } else if (err) {
+        console.log(err)
+        status = 500
+      }
+      callback(status)
+    })
+}
+
 function updateProgram(unitSlug, programDate, programJson, callback) {
-  con.query(`INSERT INTO Program (unitSlug, programDate, programJson)
-            VALUES (?, ?, ?)
-            ON DUPLICATE KEY UPDATE programJson = ?`, [unitSlug, programDate, JSON.stringify(programJson), JSON.stringify(programJson)],
+  con.query(`UPDATE Program SET programJson = ?
+            WHERE unitSlug = ? AND programDate = ?`, [JSON.stringify(programJson), unitSlug, programDate],
     (err, result) => {
       let status = 200
       if (err) {
         console.log(err)
         status = 500
-      } else if (result.affectedRows == 1) { // New record created
-        status = 201
       }
       callback(status)
     })
@@ -224,6 +252,12 @@ app.get('/api/v1/signout', (req, res) => {
   res.redirect('/');
 });
 
+app.get('/api/v1/units', (req, res) => {
+  getUnits((data) => {
+    res.json(data)
+  })
+})
+
 app.get('/api/v1/units/:unitSlug', (req, res) => {
   const unitSlug = req.params.unitSlug
   getUnit(unitSlug, (data) => {
@@ -241,14 +275,14 @@ app.get('/api/v1/units/:unitSlug/:programDate', (req, res) => {
   })
 })
 
+// Create a new program
 app.post('/api/v1/units/:unitSlug', auth, (req, res) => {
   const unitSlug = req.params.unitSlug // TODO: Clean/validate slug and date
   const programDate = req.body.programDate
   const basedOnDate = req.body.basedOnDate
 
-  // TODO: Don't overwrite existing program when user tries to create a new program with the same date
   getDefaultProgramData(unitSlug, programDate, basedOnDate, (programJson) => {
-    updateProgram(unitSlug, programDate, programJson, (status) => {
+    createProgram(unitSlug, programDate, programJson, (status) => {
       res.status(status)
       getUnit(unitSlug, (data) => {
         res.json(data)
@@ -257,10 +291,11 @@ app.post('/api/v1/units/:unitSlug', auth, (req, res) => {
   })
 })
 
+// Update an existing program
 app.put('/api/v1/units/:unitSlug/:programDate', auth, (req, res) => {
   const unitSlug = req.params.unitSlug // TODO: Clean/validate slug and date
   const programDate = req.params.programDate
-  const programJson = req.body.programJson
+  const programJson = req.body
 
   updateProgram(unitSlug, programDate, programJson, (status) => {
     res.status(status)
