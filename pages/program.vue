@@ -241,8 +241,7 @@
         // Create updated JSON and save to database
         if (this.allowEdit && this.mode == 'edit') {
 
-          // TODO: Use correct URL
-          fetch(`http://localhost:5000/api/v1/units/${this.wardSlug}/${this.programId}`, {
+          fetch(`https://myprogram.cc/api/v1/units/${this.wardSlug}/${this.programId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', },
             body: JSON.stringify(this.programData, null, 2),
@@ -289,8 +288,7 @@
         }
 
         // Post request to create a new program
-        // TODO: Use correct URL
-        fetch(`http://localhost:5000/api/v1/units/${this.wardSlug}`, {
+        fetch(`https://myprogram.cc/api/v1/units/${this.wardSlug}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', },
           body: JSON.stringify({
@@ -318,9 +316,8 @@
           return this.$router.push(`/`);
         }
 
-        // TODO: Use correct URL
         // const wardJsonUrl = `${window.location.protocol}//${window.location.host}/api/v1/units/${wardSlug}`;
-        const wardJsonUrl = `http://localhost:5000/api/v1/units/${wardSlug}`;
+        const wardJsonUrl = `https://myprogram.cc/api/v1/units/${wardSlug}`;
         fetch(wardJsonUrl)
           .then(response => response.json())
           .then(data => {
@@ -347,9 +344,7 @@
           });
       },
       fetchProgram(wardSlug, programId) {
-        // TODO: Use correct URL
-        // const programJsonUrl = `${window.location.protocol}//${window.location.host}/api/v1/units/${wardSlug}/${programId}`;
-        const programJsonUrl = `http://localhost:5000/api/v1/units/${wardSlug}/${programId}`;
+        const programJsonUrl = `https://myprogram.cc/api/v1/units/${wardSlug}/${programId}`;
         fetch(programJsonUrl)
           .then(response => response.json())
           .then(data => {
@@ -408,8 +403,7 @@
         this.programData.secondHour[index].location = location;
       },
       signOut() {
-        // TODO: Use correct URL
-        fetch('http://localhost:5000/api/v1/signout')
+        fetch('https://myprogram.cc/api/v1/signout')
         .then(() => {
           this.$router.push('/');
         })

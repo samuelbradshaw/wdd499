@@ -45,7 +45,7 @@ var con = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
-  database: 'wdd499',
+  database: process.env.DB_NAME,
   dateStrings: true,
 })
 con.connect(function(err) {
